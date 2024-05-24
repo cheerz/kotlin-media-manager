@@ -8,6 +8,9 @@ fun Application.configureRouting() {
     routing {
         homeRoute()
 
+        listMediaRoute()
+        getMediaRoute()
+
         testSerializationRoute()
     }
 }
