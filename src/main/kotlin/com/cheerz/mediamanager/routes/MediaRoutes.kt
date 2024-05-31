@@ -5,7 +5,6 @@ import com.cheerz.mediamanager.models.MediaItem
 import com.cheerz.mediamanager.models.MediaType
 import com.cheerz.mediamanager.models.toMediaItem
 import com.cheerz.mediamanager.storage
-import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -16,6 +15,7 @@ import io.ktor.http.content.streamProvider
 import io.ktor.server.application.call
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondFile
 import io.ktor.server.routing.*
 import java.io.File
@@ -81,8 +81,10 @@ private fun Route.download() {
     get("/download/{id}") {
         val id = call.parameters["id"]
 
-        val file = File("medias/$id")
-        if (!file.exists()) {
+        val bucketName = call.application.environment.config.property("ktor.storage.bucket_name").getString()
+        val blob = storage.get(bucketName).get(id)
+
+        if (blob == null) {
             call.response.status(HttpStatusCode.NotFound)
             call.respond(
                 CheerzResponse(null, "Not found")
@@ -90,7 +92,6 @@ private fun Route.download() {
             return@get
         }
 
-        call.response.headers.append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
-        call.respondFile(file)
+        call.respondBytes(blob.getContent(), ContentType.Image.JPEG, HttpStatusCode.OK)
     }
 }
