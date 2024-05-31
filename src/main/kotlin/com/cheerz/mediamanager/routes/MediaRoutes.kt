@@ -3,7 +3,9 @@ package com.cheerz.mediamanager.routes
 import com.cheerz.mediamanager.models.CheerzResponse
 import com.cheerz.mediamanager.models.MediaItem
 import com.cheerz.mediamanager.models.MediaType
-import com.cheerz.mediamanager.storage.mediaStorage
+import com.cheerz.mediamanager.models.toMediaItem
+import com.cheerz.mediamanager.storage
+import com.google.cloud.storage.Storage
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -14,7 +16,6 @@ import io.ktor.server.application.call
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import java.io.File
 
@@ -22,23 +23,21 @@ import java.io.File
 fun Route.mediaRoutes() = route("/media") {
     upload()
     download()
+    getAll()
+}
 
-    get("/") {
-        if (mediaStorage.isNotEmpty()) {
-            call.respond(mediaStorage)
-        }
-    }
+private fun Route.getAll() {
+    get {
+        val bucketName = call.application.environment.config.property("ktor.storage.bucket_name").getString()
+        val buckets = storage.get(bucketName).list(Storage.BlobListOption.currentDirectory()).values
+        val medias = buckets
+            .filter { it.contentType.startsWith("image") }
+            .map { it.toMediaItem() }
 
-    get("/{id?}") {
-        val id = call.parameters["id"] ?: return@get call.respondText(
-            "Bad Request",
-            status = HttpStatusCode.BadRequest
+        call.response.status(HttpStatusCode.OK)
+        call.respond(
+            CheerzResponse(medias, null)
         )
-        val media = mediaStorage.find { it.id == id } ?: return@get call.respondText(
-            "Not Found",
-            status = HttpStatusCode.NotFound
-        )
-        call.respond(media)
     }
 }
 
@@ -48,15 +47,11 @@ private fun Route.upload() {
         multipart.forEachPart { part ->
             when (part) {
                 is PartData.FileItem -> {
-                    val directory = File("medias")
-                    if (!directory.exists()) {
-                        directory.mkdirs()
-                    }
-
                     val uuid = java.util.UUID.randomUUID().toString()
                     val fileBytes = part.streamProvider().readBytes()
-                    File("medias/$uuid")
-                        .writeBytes(fileBytes)
+
+                    val bucketName = call.application.environment.config.property("ktor.storage.bucket_name").getString()
+                    storage.get(bucketName).create(uuid, fileBytes)
 
                     val media = MediaItem(uuid, MediaType.IMAGE)
                     call.response.status(HttpStatusCode.Created)
