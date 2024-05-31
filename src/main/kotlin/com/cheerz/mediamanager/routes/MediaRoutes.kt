@@ -32,7 +32,7 @@ private fun Route.getAll() {
         val bucketName = call.application.environment.config.property("ktor.storage.bucket_name").getString()
         val buckets = storage.get(bucketName).list(Storage.BlobListOption.currentDirectory()).values
         val medias = buckets
-            .filter { it.contentType.startsWith("image") }
+            .filter { it.contentType?.startsWith("image") == true }
             .map { it.toMediaItem() }
 
         call.response.status(HttpStatusCode.OK)
