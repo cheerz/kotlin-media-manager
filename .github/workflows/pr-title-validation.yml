@@ -1,0 +1,20 @@
+name: "Lint PR Title"
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+jobs:
+  main:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pragmatic-tools/pr-title-validator@1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          pattern: ^(\[(Feat|Fix|Tech|UI)\] ([A-Z\d]+)-\d+ - .+)|(Bump version \d{4}\.\d+\.\d+)|(Release \d{4}\.\d+\.\d+)$
