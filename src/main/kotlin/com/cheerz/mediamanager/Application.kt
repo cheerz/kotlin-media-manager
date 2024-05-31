@@ -8,7 +8,7 @@ import io.ktor.server.netty.EngineMain
 
 val storage = StorageOptions.getDefaultInstance().service
 
-public fun main(args: Array<String>): Unit = EngineMain.main(args)
+fun main(args: Array<String>): Unit = EngineMain.main(args)
 
 fun Application.module() {
     configureSerialization()
