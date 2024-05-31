@@ -8,7 +8,7 @@ import io.ktor.server.routing.get
 
 fun Route.homeRoute() {
     get("/") {
-        val buckets = storage.get("media_uploader").list().values
+        val buckets = storage.get("cheerz_medias").list().values
         for (bucket in buckets) {
             println(bucket.name)
         }
