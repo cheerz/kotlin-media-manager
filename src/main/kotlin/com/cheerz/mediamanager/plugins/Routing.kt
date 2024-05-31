@@ -8,6 +8,5 @@ fun Application.configureRouting() {
     routing {
         homeRoute()
         mediaRoutes()
-        testSerializationRoute()
     }
 }
