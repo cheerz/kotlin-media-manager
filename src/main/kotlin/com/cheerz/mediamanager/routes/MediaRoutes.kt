@@ -84,6 +84,14 @@ private fun Route.download() {
         val bucketName = call.application.environment.config.property("ktor.storage.bucket_name").getString()
         val blob = storage.get(bucketName).get(id)
 
+        if (blob == null) {
+            call.response.status(HttpStatusCode.NotFound)
+            call.respond(
+                CheerzResponse(null, "Not found")
+            )
+            return@get
+        }
+
         call.respondBytes(blob.getContent(), ContentType.Image.JPEG, HttpStatusCode.OK)
     }
 }
