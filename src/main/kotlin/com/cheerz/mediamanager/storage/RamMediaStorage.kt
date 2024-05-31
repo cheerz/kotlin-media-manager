@@ -5,11 +5,11 @@ import com.cheerz.mediamanager.models.MediaType
 
 val mediaStorage = listOf(
     MediaItem(
-        "image1",
+        "image_1",
         MediaType.IMAGE,
     ),
     MediaItem(
-        "video1",
+        "video_1",
         MediaType.VIDEO,
     )
 )
