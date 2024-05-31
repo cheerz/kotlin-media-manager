@@ -15,12 +15,34 @@ import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
+import io.ktor.server.routing.*
 import java.io.File
 
-fun Route.upload() {
+
+fun Route.mediaRoutes() = route("/media") {
+    upload()
+    download()
+
+    get("/") {
+        if (mediaStorage.isNotEmpty()) {
+            call.respond(mediaStorage)
+        }
+    }
+
+    get("/{id?}") {
+        val id = call.parameters["id"] ?: return@get call.respondText(
+            "Bad Request",
+            status = HttpStatusCode.BadRequest
+        )
+        val media = mediaStorage.find { it.id == id } ?: return@get call.respondText(
+            "Not Found",
+            status = HttpStatusCode.NotFound
+        )
+        call.respond(media)
+    }
+}
+
+private fun Route.upload() {
     post("/upload") {
         val multipart = call.receiveMultipart()
         multipart.forEachPart { part ->
@@ -59,7 +81,7 @@ fun Route.upload() {
     }
 }
 
-fun Route.download() {
+private fun Route.download() {
     get("/download/{id}") {
         val id = call.parameters["id"]
 
@@ -74,24 +96,5 @@ fun Route.download() {
 
         call.response.headers.append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
         call.respondFile(file)
-    }
-}
-
-fun Route.listMediaRoute() {
-    get("/media") {
-        if (mediaStorage.isNotEmpty()) {
-            call.respond(mediaStorage)
-        }
-    }
-}
-
-fun Route.getMediaRoute() {
-    get("/media/{id?}") {
-        val id = call.parameters["id"] ?: return@get call.respondText("Bad Request", status = HttpStatusCode.BadRequest)
-        val media = mediaStorage.find { it.id == id } ?: return@get call.respondText(
-            "Not Found",
-            status = HttpStatusCode.NotFound
-        )
-        call.respond(media)
     }
 }
