@@ -5,6 +5,7 @@ import com.cheerz.mediamanager.models.MediaItem
 import com.cheerz.mediamanager.models.MediaType
 import com.cheerz.mediamanager.models.toMediaItem
 import com.cheerz.mediamanager.storage
+import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -51,7 +52,7 @@ private fun Route.upload() {
                     val fileBytes = part.streamProvider().readBytes()
 
                     val bucketName = call.application.environment.config.property("ktor.storage.bucket_name").getString()
-                    storage.get(bucketName).create(uuid, fileBytes)
+                    storage.get(bucketName).create(uuid, fileBytes, part.contentType.toString())
 
                     val media = MediaItem(uuid, MediaType.IMAGE)
                     call.response.status(HttpStatusCode.Created)
