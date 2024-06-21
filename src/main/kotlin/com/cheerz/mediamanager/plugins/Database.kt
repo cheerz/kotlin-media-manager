@@ -1,7 +1,12 @@
 package com.cheerz.mediamanager.plugins
 
+import com.cheerz.mediamanager.entities.MediaTable
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.StdOutSqlLogger
+import org.jetbrains.exposed.sql.addLogger
+import org.jetbrains.exposed.sql.transactions.transaction
 
 fun Application.configureDatabase() {
     val user = environment.config.property("ktor.database.user").getString()
@@ -10,10 +15,15 @@ fun Application.configureDatabase() {
     val port = environment.config.property("ktor.database.port").getString()
     val name = environment.config.property("ktor.database.name").getString()
 
-    Database.connect(
-        "\"jdbc:postgresql://$host:$port/$name\",",
+    val database = Database.connect(
+        "jdbc:postgresql://$host:$port/$name",
         driver = "org.postgresql.Driver",
         user = user,
         password = password
     )
+
+    transaction(database) {
+        addLogger(StdOutSqlLogger)
+        SchemaUtils.create(MediaTable)
+    }
 }

@@ -1,5 +1,6 @@
 package com.cheerz.mediamanager.routes
 
+import com.cheerz.mediamanager.entities.MediaDAO
 import com.cheerz.mediamanager.models.CheerzResponse
 import com.cheerz.mediamanager.models.MediaItem
 import com.cheerz.mediamanager.models.MediaType
@@ -22,6 +23,8 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.util.pipeline.PipelineContext
+import org.jetbrains.exposed.sql.transactions.transaction
+import javax.print.attribute.standard.Media
 
 
 fun Route.mediaRoutes() = route("/media") {
@@ -57,6 +60,13 @@ private fun Route.upload() {
                     getBucket().create(uuid, fileBytes, part.contentType.toString())
 
                     val media = MediaItem(uuid, MediaType.IMAGE)
+
+                    transaction {
+                        MediaDAO.new {
+                            type = media.type.toString()
+                        }
+                    }
+
                     call.response.status(HttpStatusCode.Created)
                     call.respond(
                         CheerzResponse(media, null)
