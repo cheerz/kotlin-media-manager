@@ -1,6 +1,7 @@
 package com.cheerz.mediamanager.routes
 
 import com.cheerz.mediamanager.entities.MediaDAO
+import com.cheerz.mediamanager.entities.MediaTable
 import com.cheerz.mediamanager.models.CheerzResponse
 import com.cheerz.mediamanager.models.MediaItem
 import com.cheerz.mediamanager.models.MediaType
@@ -22,9 +23,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
-import io.ktor.util.*
 import io.ktor.util.pipeline.PipelineContext
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.security.MessageDigest
+import java.time.LocalDateTime
 
 
 fun Route.mediaRoutes() = route("/media") {
@@ -56,7 +58,7 @@ private fun Route.upload() {
                 is PartData.FileItem -> {
                     val fileBytes = part.streamProvider().readBytes()
 
-                    val mediaSha1 = sha1(fileBytes).toString()
+                    val mediaSha1 = sha1(fileBytes)
 
                     getBucket().create(mediaSha1, fileBytes, part.contentType.toString())
 
@@ -64,6 +66,7 @@ private fun Route.upload() {
 
                     transaction {
                         MediaDAO.new {
+                            sha1 = mediaSha1
                             type = media.type.toString()
                         }
                     }
@@ -92,8 +95,8 @@ private fun Route.upload() {
 }
 
 private fun Route.download() {
-    get("/download/{requestedSha1}") {
-        val requestedSha1 = call.parameters["sha1"]
+    get("/download/{sha1}") {
+        val requestedSha1 = requireNotNull(call.parameters["sha1"])
 
         val blob = getBucket().get(requestedSha1)
 
@@ -106,8 +109,8 @@ private fun Route.download() {
         }
 
         transaction {
-            val mediaDAO = MediaDAO.find { it.sha1 eq requestedSha1 }.firstOrNull()
-
+            val media = MediaDAO.find { MediaTable.sha1 eq requestedSha1 }.singleOrNull()
+            media?.lastAccessedAt = LocalDateTime.now()
         }
 
         call.respondBytes(blob.getContent(), ContentType.Image.JPEG, HttpStatusCode.OK)
@@ -117,4 +120,10 @@ private fun Route.download() {
 private fun PipelineContext<*, ApplicationCall>.getBucket(): Bucket {
     val bucketName = call.application.environment.config.property("ktor.storage.bucket_name").getString()
     return storage.get(bucketName)
+}
+
+private fun sha1(input: ByteArray): String {
+    val md = MessageDigest.getInstance("SHA-1")
+    val digest = md.digest(input)
+    return digest.joinToString("") { "%02x".format(it) }
 }

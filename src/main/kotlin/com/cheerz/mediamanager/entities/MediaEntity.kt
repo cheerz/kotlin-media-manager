@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 object MediaTable: IntIdTable("media") {
     val sha1 = varchar("sha1", 255)
     val type = varchar("type", 255)
-    val lastAccessedAt = datetime("last_accessed_at")
+    val lastAccessedAt = datetime("last_accessed_at").nullable()
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
 }

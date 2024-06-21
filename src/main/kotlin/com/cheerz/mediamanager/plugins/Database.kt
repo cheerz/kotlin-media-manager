@@ -1,7 +1,7 @@
 package com.cheerz.mediamanager.plugins
 
 import com.cheerz.mediamanager.entities.MediaTable
-import io.ktor.server.application.*
+import io.ktor.server.application.Application
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
