@@ -1,5 +1,6 @@
 package com.cheerz.mediamanager
 
+import com.cheerz.mediamanager.plugins.configureDatabase
 import com.cheerz.mediamanager.plugins.configureRouting
 import com.cheerz.mediamanager.plugins.configureSerialization
 import com.google.cloud.storage.StorageOptions
@@ -13,4 +14,5 @@ fun main(args: Array<String>): Unit = EngineMain.main(args)
 fun Application.module() {
     configureSerialization()
     configureRouting()
+    configureDatabase()
 }
