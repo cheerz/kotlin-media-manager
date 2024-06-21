@@ -22,9 +22,9 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import io.ktor.util.*
 import io.ktor.util.pipeline.PipelineContext
 import org.jetbrains.exposed.sql.transactions.transaction
-import javax.print.attribute.standard.Media
 
 
 fun Route.mediaRoutes() = route("/media") {
@@ -54,12 +54,13 @@ private fun Route.upload() {
         multipart.forEachPart { part ->
             when (part) {
                 is PartData.FileItem -> {
-                    val uuid = java.util.UUID.randomUUID().toString()
                     val fileBytes = part.streamProvider().readBytes()
 
-                    getBucket().create(uuid, fileBytes, part.contentType.toString())
+                    val mediaSha1 = sha1(fileBytes).toString()
 
-                    val media = MediaItem(uuid, MediaType.IMAGE)
+                    getBucket().create(mediaSha1, fileBytes, part.contentType.toString())
+
+                    val media = MediaItem(mediaSha1, MediaType.IMAGE)
 
                     transaction {
                         MediaDAO.new {
@@ -91,10 +92,10 @@ private fun Route.upload() {
 }
 
 private fun Route.download() {
-    get("/download/{id}") {
-        val id = call.parameters["id"]
+    get("/download/{requestedSha1}") {
+        val requestedSha1 = call.parameters["sha1"]
 
-        val blob = getBucket().get(id)
+        val blob = getBucket().get(requestedSha1)
 
         if (blob == null) {
             call.response.status(HttpStatusCode.NotFound)
@@ -102,6 +103,11 @@ private fun Route.download() {
                 CheerzResponse(null, "Not found")
             )
             return@get
+        }
+
+        transaction {
+            val mediaDAO = MediaDAO.find { it.sha1 eq requestedSha1 }.firstOrNull()
+
         }
 
         call.respondBytes(blob.getContent(), ContentType.Image.JPEG, HttpStatusCode.OK)

@@ -8,7 +8,9 @@ import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 
 object MediaTable: IntIdTable("media") {
+    val sha1 = varchar("sha1", 255)
     val type = varchar("type", 255)
+    val lastAccessedAt = datetime("last_accessed_at")
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
     val updatedAt = datetime("updated_at").defaultExpression(CurrentDateTime)
 }
@@ -16,7 +18,9 @@ object MediaTable: IntIdTable("media") {
 class MediaDAO(id: EntityID<Int>): IntEntity(id) {
     companion object: IntEntityClass<MediaDAO>(MediaTable)
 
+    var sha1 by MediaTable.sha1
     var type by MediaTable.type
+    var lastAccessedAt by MediaTable.lastAccessedAt
     var createdAt by MediaTable.createdAt
     var updatedAt by MediaTable.updatedAt
 }
