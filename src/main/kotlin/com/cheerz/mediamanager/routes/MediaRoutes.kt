@@ -4,7 +4,6 @@ import com.cheerz.mediamanager.entities.MediaDAO
 import com.cheerz.mediamanager.entities.MediaTable
 import com.cheerz.mediamanager.models.*
 import com.cheerz.mediamanager.storage
-import com.google.cloud.storage.Blob
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
 import io.ktor.http.ContentType
@@ -22,6 +21,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.util.pipeline.PipelineContext
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 
@@ -56,6 +56,19 @@ private fun Route.upload() {
                     val fileBytes = part.streamProvider().readBytes()
                     val media = part.toMediaItem(fileBytes)
                     val contentType = part.contentType
+
+                    val hasExistingMedia = transaction {
+                        val existingMedia = MediaDAO.find { MediaTable.sha1 eq media.sha1 }
+                        return@transaction !existingMedia.empty()
+                    }
+
+                    if (hasExistingMedia) {
+                        call.response.status(HttpStatusCode.Conflict)
+                        call.respond(
+                            CheerzResponse(null, "Conflict")
+                        )
+                        return@forEachPart
+                    }
 
                     getBucket().create(media.sha1, fileBytes, contentType.toString())
 
