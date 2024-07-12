@@ -2,10 +2,7 @@ package com.cheerz.mediamanager.routes
 
 import com.cheerz.mediamanager.entities.MediaDAO
 import com.cheerz.mediamanager.entities.MediaTable
-import com.cheerz.mediamanager.models.CheerzResponse
-import com.cheerz.mediamanager.models.MediaItem
-import com.cheerz.mediamanager.models.MediaType
-import com.cheerz.mediamanager.models.toMediaItem
+import com.cheerz.mediamanager.models.*
 import com.cheerz.mediamanager.storage
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
@@ -25,7 +22,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.util.pipeline.PipelineContext
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.security.MessageDigest
 import java.time.LocalDateTime
 
 
@@ -57,16 +53,14 @@ private fun Route.upload() {
             when (part) {
                 is PartData.FileItem -> {
                     val fileBytes = part.streamProvider().readBytes()
+                    val media = part.toMediaItem(fileBytes)
+                    val contentType = part.contentType
 
-                    val mediaSha1 = sha1(fileBytes)
-
-                    getBucket().create(mediaSha1, fileBytes, part.contentType.toString())
-
-                    val media = MediaItem(mediaSha1, MediaType.IMAGE)
+                    getBucket().create(media.sha1, fileBytes, contentType.toString())
 
                     transaction {
                         MediaDAO.new {
-                            sha1 = mediaSha1
+                            sha1 = media.sha1
                             type = media.type.toString()
                         }
                     }
@@ -120,10 +114,4 @@ private fun Route.download() {
 private fun PipelineContext<*, ApplicationCall>.getBucket(): Bucket {
     val bucketName = call.application.environment.config.property("ktor.storage.bucket_name").getString()
     return storage.get(bucketName)
-}
-
-private fun sha1(input: ByteArray): String {
-    val md = MessageDigest.getInstance("SHA-1")
-    val digest = md.digest(input)
-    return digest.joinToString("") { "%02x".format(it) }
 }
