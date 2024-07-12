@@ -4,6 +4,7 @@ import com.cheerz.mediamanager.entities.MediaDAO
 import com.cheerz.mediamanager.entities.MediaTable
 import com.cheerz.mediamanager.models.*
 import com.cheerz.mediamanager.storage
+import com.google.cloud.storage.Blob
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
 import io.ktor.http.ContentType
@@ -107,7 +108,7 @@ private fun Route.download() {
             media?.lastAccessedAt = LocalDateTime.now()
         }
 
-        call.respondBytes(blob.getContent(), ContentType.Image.JPEG, HttpStatusCode.OK)
+        call.respondBytes(blob.getContent(), ContentType.parse(blob.contentType), HttpStatusCode.OK)
     }
 }
 
