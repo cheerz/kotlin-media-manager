@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 
 object MediaTable : IntIdTable("media") {
-    val sha1 = varchar("sha1", 255)
+    val sha1 = varchar("sha1", 255).uniqueIndex()
     val type = varchar("type", 255)
     val lastAccessedAt = datetime("last_accessed_at").nullable()
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)

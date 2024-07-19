@@ -34,6 +34,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:0.50.1")
     implementation("org.jetbrains.exposed:exposed-java-time:0.50.1")
     implementation("org.postgresql:postgresql:42.7.3")
+    implementation("org.flywaydb:flyway-core:8.0.3")
 
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
