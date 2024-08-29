@@ -27,6 +27,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("io.ktor:ktor-server-websockets")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("com.google.cloud:google-cloud-storage:2.38.0")
     implementation("org.jetbrains.exposed:exposed-core:0.50.1")

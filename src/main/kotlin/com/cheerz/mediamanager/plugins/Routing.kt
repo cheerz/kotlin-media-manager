@@ -8,5 +8,6 @@ fun Application.configureRouting() {
     routing {
         homeRoute()
         mediaRoutes()
+        websocketRoutes()
     }
 }
