@@ -4,6 +4,7 @@ import com.cheerz.mediamanager.entities.MediaDAO
 import com.cheerz.mediamanager.entities.MediaTable
 import com.cheerz.mediamanager.models.*
 import com.cheerz.mediamanager.storage
+import com.cheerz.mediamanager.uploadStatusFlow
 import com.google.cloud.storage.Bucket
 import com.google.cloud.storage.Storage
 import io.ktor.http.ContentType
@@ -21,7 +22,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.util.pipeline.PipelineContext
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import kotlinx.coroutines.launch
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 
@@ -80,6 +81,10 @@ private fun Route.upload() {
                     }
 
                     call.response.status(HttpStatusCode.Created)
+
+                    // Send success upload notif to websocket
+                    uploadStatusFlow.value = "${media.sha1} uploaded"
+
                     call.respond(
                         CheerzResponse(media, null)
                     )

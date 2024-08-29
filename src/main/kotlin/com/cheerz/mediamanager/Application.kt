@@ -8,9 +8,12 @@ import io.ktor.serialization.kotlinx.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.websocket.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.json.Json
 
 val storage = StorageOptions.getDefaultInstance().service
+
+val uploadStatusFlow = MutableStateFlow("")
 
 fun main(args: Array<String>): Unit = EngineMain.main(args)
 
